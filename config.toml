@@ -1,6 +1,6 @@
 baseURL = 'http://example.org/'
 languageCode = "en-us"
-title = "Feng's Annex"
+title = "Lumen's Annex"
 theme = "yinyang"
 DefaultContentLanguage = "cn"
 
@@ -15,7 +15,7 @@ DefaultContentLanguage = "cn"
     tabWidth = 2
 
 [author]
-  name = "Feng"
+  name = "Lumen"
   homepage = "https://joway.io/"
 
 [languages]
@@ -29,14 +29,14 @@ DefaultContentLanguage = "cn"
     weight = 2
 
 [params]
-headTitle = "Feng's Annex"
-description = "Log something useless, but interesting."
+headTitle = "Lumen's Annex"
+description = "Le vent se lève ，il faut tenter de vivre."
 favicon = "/logo.png"
 mainSections = ["posts"]
-staticPrefix = "https://cdn.jsdelivr.net/gh/joway/blog"
-postHeaderContent = ""
-postFooterContent = '<br/><br/><p>Subscribe：<a target="_blank" href="https://mailchi.mp/a1a0d59e7a19/joway"><b>Mailchimp</b></a></p><br/><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://blog.joway.io/images/cc.png" /></a>'
-disqus = "joway" # disqus account name
+#staticPrefix = "https://cdn.jsdelivr.net/gh/joway/blog"
+#postHeaderContent = ""
+#postFooterContent = '<br/><br/><p>Subscribe：<a target="_blank" href="https://mailchi.mp/a1a0d59e7a19/joway"><b>Mailchimp</b></a></p><br/><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://blog.joway.io/images/cc.png" /></a>'
+disqus = "Lumen" # disqus account name
 #extraHead = '<script async src="https://www.googletagmanager.com/gtag/js?id=UA-53624533-8"></script><script src="https://cdn.jsdelivr.net/gh/joway/homepage/analytics.js"></script>'
 # extraBody = '<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>'
 # postAds = '<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6400651395935595" data-ad-slot="5705651853" data-ad-format="auto" data-full-width-responsive="true"></ins>'
@@ -54,9 +54,9 @@ lazyImage = true
 # name = "Slides"
 # link = "/presentations"
 
-[[params.socials]]
-name = "Subscribe"
-link = "https://mailchi.mp/a1a0d59e7a19/joway"
+#[[params.socials]]
+#name = "Subscribe"
+#link = "https://mailchi.mp/a1a0d59e7a19/joway"
 
 #[[params.socials]]
 #name = "Travel"
