@@ -11,7 +11,7 @@ DefaultContentLanguage = "cn"
   [markup.highlight]
     guessSyntax = true
     noClasses = true
-    style = "bw"
+    style = "tango"
     tabWidth = 2
 
 [author]
@@ -19,27 +19,49 @@ DefaultContentLanguage = "cn"
   homepage = "https://joway.io/"
 
 [languages]
-  [languages.en]
-    contentDir = "content/en"
-    languageName = "English"
-    weight = 1
+  #[languages.en]
+   # contentDir = "content/en"
+  #  languageName = "English"
+  #  weight = 1
   [languages.cn]
     contentDir = "content/cn"
     languageName = "Chinese"
     weight = 2
 
 [params]
-mainSections = ["posts"]
 headTitle = "Feng's Annex"
-disqus = "Feng" # disqus account name
-extraHead = '<script async src="https://www.googletagmanager.com/gtag/js?id=UA-xxx"></script>'
-[[params.socials]]
-name = "About Me"
-link = "https://joway.io"
-[[params.socials]]
-name = "Github"
-link = "https://github.com/joway"
+description = "Log something useless, but interesting."
+favicon = "/logo.png"
+mainSections = ["posts"]
+staticPrefix = "https://cdn.jsdelivr.net/gh/joway/blog"
 postHeaderContent = ""
-postFooterContent = "<br/><br/><p>Subscribe to：<a target='_blank' href='https://mailchi.mp/a1a0d59e7a19/joway'>Joway's Blog</a></p>"
-# extraCSSFiles = ["css/foo.css", "css/bar.css"]
-extraCSSFiles = []
+postFooterContent = '<br/><br/><p>Subscribe：<a target="_blank" href="https://mailchi.mp/a1a0d59e7a19/joway"><b>Mailchimp</b></a></p><br/><a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://blog.joway.io/images/cc.png" /></a>'
+disqus = "joway" # disqus account name
+#extraHead = '<script async src="https://www.googletagmanager.com/gtag/js?id=UA-53624533-8"></script><script src="https://cdn.jsdelivr.net/gh/joway/homepage/analytics.js"></script>'
+# extraBody = '<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>'
+# postAds = '<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6400651395935595" data-ad-slot="5705651853" data-ad-format="auto" data-full-width-responsive="true"></ins>'
+lazyImage = true
+
+# [[params.socials]]
+# name = "Telegram"
+# link = "https://t.me/biosthinking"
+
+# [[params.socials]]
+# name = "RSS"
+# link = "/index.xml"
+
+# [[params.socials]]
+# name = "Slides"
+# link = "/presentations"
+
+[[params.socials]]
+name = "Subscribe"
+link = "https://mailchi.mp/a1a0d59e7a19/joway"
+
+#[[params.socials]]
+#name = "Travel"
+#link = "/travel"
+
+[[params.socials]]
+name = "About"
+link =  "/about" 
