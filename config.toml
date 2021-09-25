@@ -15,7 +15,7 @@ DefaultContentLanguage = "cn"
     tabWidth = 2
 
 [author]
-  name = "Joway"
+  name = "Feng"
   homepage = "https://joway.io/"
 
 [languages]
@@ -31,7 +31,7 @@ DefaultContentLanguage = "cn"
 [params]
 mainSections = ["posts"]
 headTitle = "Feng's Annex"
-disqus = "joway" # disqus account name
+disqus = "Feng" # disqus account name
 extraHead = '<script async src="https://www.googletagmanager.com/gtag/js?id=UA-xxx"></script>'
 [[params.socials]]
 name = "About Me"
