@@ -1,5 +1,5 @@
 ---
-title: iOS丨使用AVPlayer播放视频
+title: iOS 丨 使用AVPlayer播放视频
 date: 2020-09-08
 categories: ['iOS']
 draft: false
