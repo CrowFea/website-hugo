@@ -19,7 +19,10 @@ DefaultContentLanguage = "cn"
   homepage = "https://joway.io/"
 
 [languages]
-
+  [languages.en]
+    contentDir = "content/en"
+    languageName = "English"
+    weight = 1
   [languages.cn]
     contentDir = "content/cn"
     languageName = "Chinese"
