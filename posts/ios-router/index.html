@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Hugo 0.88.1" />
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="Lumen" />
+  <meta property="og:url" content="http://example.org/posts/ios-router/" />
+  <link rel="canonical" href="http://example.org/posts/ios-router/" /><link rel="apple-touch-icon" href="/logo.png" />
+  <link rel="icon" href="/logo.png" />
+  <link rel="shortcut" href="/logo.png" /><link rel="alternate" type="application/atom+xml" href="http://example.org/index.xml" title="Lumen&#39;s Annex">
+
+  <script type="application/ld+json">
+  {
+      "@context" : "http://schema.org",
+      "@type" : "BlogPosting",
+      "mainEntityOfPage": {
+           "@type": "WebPage",
+           "@id": "http:\/\/example.org\/"
+      },
+      "articleSection" : "posts",
+      "name" : "iOS | Router",
+      "headline" : "iOS | Router",
+      "description" : "路由定义 简洁来说：路由是一个映射方法。我们将输入的信息以某种特定的方式进行转换，最后输出转换计算后的资源。\n我们用另外一个原理一致的流程来描述这件事情。客户端需要从后端获取数据，我们发出了一条request，后端获取并解析这条request，在他们自己的逻辑中做一些操作（对数据库增删改查），最后输出一条结果，返回给客户端。\n这其实就是一个典型的路由的过程。\n对于后端来说，数据本身就是资源；对于客户端和前端来说，页面就是资源。我们最常见到的一种情况是页面间的路由跳转，实际上可以把它理解成，我们输入了一条想要跳转的路由指令，在客户端内部的映射计算之后，返回了一个结果，这个结果就是一个VC。\n路由用来解决什么问题  页面间的耦合。以上面的情况来说，如果我们通过navigationController来惊醒页面间的跳转，就势必在一个VC中引入另一个VC。这就造成了耦合。那么再假设，iOS上支持3D touch，很可能用户会一下就跳进一个非常深的页面。这样的耦合就很恐怖。 组件间的耦合。随着业务的发展，组件之间的耦合也十分容易产生。好的组件应当尽量避免组件之间的耦合。  iOS APP之间的跳转 再进一步的研究之前，让我们首先看看iOS的APP之间是如何跳转的。这或许对我们有一些启示。\niOS APP之间的跳转有两种方式：URL Scheme和Universal Link。\nURL Scheme是每个APP可以提供一个URL，直接在浏览器中输入URL就可以跳转打开对应的APP。这个scheme是可以在info.plist里面去配的。\n如何设计好的路由 路由最主要实现的功能：\n 注册路由 管理路由资源 匹配和派发资源  做的好的路由应当是没有感知的，悄无声息的就帮助系统完成了互相连接的工作。这样的设计自然比较困按钮，我们从几个例子来看看路由的设计方式\nJLRoutes JLRoutes存储了一个全局的map，这个Map会以scheme为Key，JLRoutes为Value。所以在routeControllerMap里面每个scheme都是唯一的。\nJLRoutes里面会保存一个数组，数组内部存储了路由规则里面包含的外部传入的闭包，并且会根据优先级进行排序路由。所以实际上，JLRoute内部维护了一个单调队列，所以再插入路由的时候直接顺序遍历就可以了。\n这是存储和注册的过程。那么怎么进行查询和映射呢？JLRoutes会根据外部传入的URL和一些额外的参数构建一个request。这个请求会在当前的JLRoute的路由数组内依次的请求，数组内部的每一个规则会生成一个response。只有符合条件的response才可以match，最后找到匹配的response，从里面的字典参数取出来返回即可。\n优点：\n 能匹配多种不同规则的 URL，可以定义自定义的匹配规则、匹配逻辑 可以指定每个路由的优先级  缺点：\n 当注册的 URL 比较多时，匹配效率比较低。  A Router A的router主要分为两个过程，注册和路由跳转。A的注册是懒注册的，在第一次使用该路由的时候，如果没在全局的映射表中找到对应的路由，那么就会开始注册。所有的路由信息都是写入到Data段内，直接从中读取。\n参考文献 Halfrost-Field\/iOS_Router.md at master · halfrost\/Halfrost-Field",
+      "inLanguage" : "en-US",
+      "author" : "Lumen",
+      "creator" : "Lumen",
+      "publisher": "Lumen",
+      "accountablePerson" : "Lumen",
+      "copyrightHolder" : "Lumen",
+      "copyrightYear" : "2021",
+      "datePublished": "2021-08-13 00:00:00 \u002b0000 UTC",
+      "dateModified" : "2021-08-13 00:00:00 \u002b0000 UTC",
+      "url" : "http:\/\/example.org\/posts\/ios-router\/",
+      "keywords" : [  ]
+  }
+</script>
+<title>iOS | Router</title>
+  <meta property="og:title" content="iOS | Router" />
+  <meta property="og:type" content="article" />
+  <meta property="og:description" content="路由定义 简洁来说：路由是一个映射方法。我们将输入的信息以某种特定的方式进行转换，最后输出转换计算后的资源。
+我们用另外一个原理一致的流程来描述这件事情。客户端需要从后端获取数据，我们发出了一条request，后端获取并解析这条request，在他们自己的逻辑中做一些操作（对数据库增删改查），最后输出一条结果，返回给客户端。
+这其实就是一个典型的路由的过程。
+对于后端来说，数据本身就是资源；对于客户端和前端来说，页面就是资源。我们最常见到的一种情况是页面间的路由跳转，实际上可以把它理解成，我们输入了一条想要跳转的路由指令，在客户端内部的映射计算之后，返回了一个结果，这个结果就是一个VC。
+路由用来解决什么问题  页面间的耦合。以上面的情况来说，如果我们通过navigationController来惊醒页面间的跳转，就势必在一个VC中引入另一个VC。这就造成了耦合。那么再假设，iOS上支持3D touch，很可能用户会一下就跳进一个非常深的页面。这样的耦合就很恐怖。 组件间的耦合。随着业务的发展，组件之间的耦合也十分容易产生。好的组件应当尽量避免组件之间的耦合。  iOS APP之间的跳转 再进一步的研究之前，让我们首先看看iOS的APP之间是如何跳转的。这或许对我们有一些启示。
+iOS APP之间的跳转有两种方式：URL Scheme和Universal Link。
+URL Scheme是每个APP可以提供一个URL，直接在浏览器中输入URL就可以跳转打开对应的APP。这个scheme是可以在info.plist里面去配的。
+如何设计好的路由 路由最主要实现的功能：
+ 注册路由 管理路由资源 匹配和派发资源  做的好的路由应当是没有感知的，悄无声息的就帮助系统完成了互相连接的工作。这样的设计自然比较困按钮，我们从几个例子来看看路由的设计方式
+JLRoutes JLRoutes存储了一个全局的map，这个Map会以scheme为Key，JLRoutes为Value。所以在routeControllerMap里面每个scheme都是唯一的。
+JLRoutes里面会保存一个数组，数组内部存储了路由规则里面包含的外部传入的闭包，并且会根据优先级进行排序路由。所以实际上，JLRoute内部维护了一个单调队列，所以再插入路由的时候直接顺序遍历就可以了。
+这是存储和注册的过程。那么怎么进行查询和映射呢？JLRoutes会根据外部传入的URL和一些额外的参数构建一个request。这个请求会在当前的JLRoute的路由数组内依次的请求，数组内部的每一个规则会生成一个response。只有符合条件的response才可以match，最后找到匹配的response，从里面的字典参数取出来返回即可。
+优点：
+ 能匹配多种不同规则的 URL，可以定义自定义的匹配规则、匹配逻辑 可以指定每个路由的优先级  缺点：
+ 当注册的 URL 比较多时，匹配效率比较低。  A Router A的router主要分为两个过程，注册和路由跳转。A的注册是懒注册的，在第一次使用该路由的时候，如果没在全局的映射表中找到对应的路由，那么就会开始注册。所有的路由信息都是写入到Data段内，直接从中读取。
+参考文献 Halfrost-Field/iOS_Router.md at master · halfrost/Halfrost-Field" />
+  <meta name="description" content="路由定义 简洁来说：路由是一个映射方法。我们将输入的信息以某种特定的方式进行转换，最后输出转换计算后的资源。
+我们用另外一个原理一致的流程来描述这件事情。客户端需要从后端获取数据，我们发出了一条request，后端获取并解析这条request，在他们自己的逻辑中做一些操作（对数据库增删改查），最后输出一条结果，返回给客户端。
+这其实就是一个典型的路由的过程。
+对于后端来说，数据本身就是资源；对于客户端和前端来说，页面就是资源。我们最常见到的一种情况是页面间的路由跳转，实际上可以把它理解成，我们输入了一条想要跳转的路由指令，在客户端内部的映射计算之后，返回了一个结果，这个结果就是一个VC。
+路由用来解决什么问题  页面间的耦合。以上面的情况来说，如果我们通过navigationController来惊醒页面间的跳转，就势必在一个VC中引入另一个VC。这就造成了耦合。那么再假设，iOS上支持3D touch，很可能用户会一下就跳进一个非常深的页面。这样的耦合就很恐怖。 组件间的耦合。随着业务的发展，组件之间的耦合也十分容易产生。好的组件应当尽量避免组件之间的耦合。  iOS APP之间的跳转 再进一步的研究之前，让我们首先看看iOS的APP之间是如何跳转的。这或许对我们有一些启示。
+iOS APP之间的跳转有两种方式：URL Scheme和Universal Link。
+URL Scheme是每个APP可以提供一个URL，直接在浏览器中输入URL就可以跳转打开对应的APP。这个scheme是可以在info.plist里面去配的。
+如何设计好的路由 路由最主要实现的功能：
+ 注册路由 管理路由资源 匹配和派发资源  做的好的路由应当是没有感知的，悄无声息的就帮助系统完成了互相连接的工作。这样的设计自然比较困按钮，我们从几个例子来看看路由的设计方式
+JLRoutes JLRoutes存储了一个全局的map，这个Map会以scheme为Key，JLRoutes为Value。所以在routeControllerMap里面每个scheme都是唯一的。
+JLRoutes里面会保存一个数组，数组内部存储了路由规则里面包含的外部传入的闭包，并且会根据优先级进行排序路由。所以实际上，JLRoute内部维护了一个单调队列，所以再插入路由的时候直接顺序遍历就可以了。
+这是存储和注册的过程。那么怎么进行查询和映射呢？JLRoutes会根据外部传入的URL和一些额外的参数构建一个request。这个请求会在当前的JLRoute的路由数组内依次的请求，数组内部的每一个规则会生成一个response。只有符合条件的response才可以match，最后找到匹配的response，从里面的字典参数取出来返回即可。
+优点：
+ 能匹配多种不同规则的 URL，可以定义自定义的匹配规则、匹配逻辑 可以指定每个路由的优先级  缺点：
+ 当注册的 URL 比较多时，匹配效率比较低。  A Router A的router主要分为两个过程，注册和路由跳转。A的注册是懒注册的，在第一次使用该路由的时候，如果没在全局的映射表中找到对应的路由，那么就会开始注册。所有的路由信息都是写入到Data段内，直接从中读取。
+参考文献 Halfrost-Field/iOS_Router.md at master · halfrost/Halfrost-Field" />
+  <meta property="og:locale" content="en-us" />
+
+  
+    <style>body{font-family:bree serif,sans-serif;-webkit-font-smoothing:antialiased;margin:0 20px}article{max-width:800px;margin-left:auto;margin-right:auto}a{color:#000;text-decoration:none}a:hover{font-weight:600;text-decoration:underline}.post-ads{margin:50px 0}.markdown-body{font-size:18px;max-width:100%}.markdown-body a{text-decoration:underline;text-decoration-color:#000}.markdown-body pre{padding:16px;overflow:auto;border-radius:10px}.markdown-body code{padding:.2em .4em;font-size:85%;background-color:#f6f8fa;border-radius:6px}.markdown-body pre>code{padding:0;font-size:100%;background-color:inherit;border:0}.Chinese .markdown-body{line-height:200%}.site-date-catalog{font-size:2rem}.header-title{font-size:2rem;font-weight:700;margin-top:32px;font-family:bungee shade,sans-serif}.header-title a{text-decoration:none}.header-subtitle{color:#666}.header-items{margin:10px 0}.header-item{margin:0 5px}.header-line{width:100%;border-width:2px;border-color:#482936;border-style:solid none none none}.lang-switch{font-weight:600}#posts-list{min-height:600px}.posts-line{font-size:1.2rem;margin:12px 0}.posts-categories{font-size:.8rem;margin:auto;text-align:center}.posts-category{padding:3px 0;border:#000 2px solid;border-radius:5px}.site-footer{margin-top:50px}.site-footer-item{margin-right:12px}.post-content img{max-width:100%;display:block;margin-right:auto;margin-top:12px}.post-header{margin-bottom:50px}.post-title{font-size:2rem;font-weight:600}.post-tags{display:inline;font-weight:600;padding:2px 5px;margin-right:6px;border:#000 2px solid;border-radius:5px}.post-date{font-weight:800;font-style:italic}.post-author{float:right;font-weight:600}.page-content{min-height:60%}.post-content{margin-bottom:50px}.post-content p{hyphens:auto;line-height:1.8;text-justify:ideographic;margin-bottom:1em}.related-content{border-width:3px;border-style:solid;border-color:#000;padding:0 10px;margin-bottom:50px;margin-top:100px}.related-content li{margin:5px 0}.taxonomy-term{font-size:3rem}.gallery-img{text-align:center}.gallery-img span{text-align:center}.gallery-img-desc{font-size:.8em;font-weight:800}#disqus_thread{position:relative}#disqus_thread:after{content:"";display:block;height:55px;width:100%;position:absolute;bottom:0;background:#fff}@media screen and (max-width:600px){.header-title,.header-subtitle,.header-items{text-align:center}.posts-line{font-size:16px}.markdown-body{font-size:16px}.post-title{font-size:2rem}.post-content p{letter-spacing:.05em}}@media screen and (max-width:48em){.posts-category{display:none}}</style>
+  
+  
+    <style>.container,.container-fluid{margin-right:auto;margin-left:auto}.container-fluid{padding-right:2rem;padding-left:2rem}.row{box-sizing:border-box;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-flex:0;-ms-flex:0 1 auto;flex:initial;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;-ms-flex-wrap:wrap;flex-wrap:wrap;margin-right:-.5rem;margin-left:-.5rem}.row.reverse{-webkit-box-orient:horizontal;-webkit-box-direction:reverse;-ms-flex-direction:row-reverse;flex-direction:row-reverse}.col.reverse{-webkit-box-orient:vertical;-webkit-box-direction:reverse;-ms-flex-direction:column-reverse;flex-direction:column-reverse}.col-xs,.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9,.col-xs-offset-0,.col-xs-offset-1,.col-xs-offset-10,.col-xs-offset-11,.col-xs-offset-12,.col-xs-offset-2,.col-xs-offset-3,.col-xs-offset-4,.col-xs-offset-5,.col-xs-offset-6,.col-xs-offset-7,.col-xs-offset-8,.col-xs-offset-9{box-sizing:border-box;-webkit-box-flex:0;-ms-flex:0 0 auto;flex:none;padding-right:.5rem;padding-left:.5rem}.col-xs{-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;-ms-flex-preferred-size:0;flex-basis:0;max-width:100%}.col-xs-1{-ms-flex-preferred-size:8.33333333%;flex-basis:8.33333333%;max-width:8.33333333%}.col-xs-2{-ms-flex-preferred-size:16.66666667%;flex-basis:16.66666667%;max-width:16.66666667%}.col-xs-3{-ms-flex-preferred-size:25%;flex-basis:25%;max-width:25%}.col-xs-4{-ms-flex-preferred-size:33.33333333%;flex-basis:33.33333333%;max-width:33.33333333%}.col-xs-5{-ms-flex-preferred-size:41.66666667%;flex-basis:41.66666667%;max-width:41.66666667%}.col-xs-6{-ms-flex-preferred-size:50%;flex-basis:50%;max-width:50%}.col-xs-7{-ms-flex-preferred-size:58.33333333%;flex-basis:58.33333333%;max-width:58.33333333%}.col-xs-8{-ms-flex-preferred-size:66.66666667%;flex-basis:66.66666667%;max-width:66.66666667%}.col-xs-9{-ms-flex-preferred-size:75%;flex-basis:75%;max-width:75%}.col-xs-10{-ms-flex-preferred-size:83.33333333%;flex-basis:83.33333333%;max-width:83.33333333%}.col-xs-11{-ms-flex-preferred-size:91.66666667%;flex-basis:91.66666667%;max-width:91.66666667%}.col-xs-12{-ms-flex-preferred-size:100%;flex-basis:100%;max-width:100%}.col-xs-offset-0{margin-left:0}.col-xs-offset-1{margin-left:8.33333333%}.col-xs-offset-2{margin-left:16.66666667%}.col-xs-offset-3{margin-left:25%}.col-xs-offset-4{margin-left:33.33333333%}.col-xs-offset-5{margin-left:41.66666667%}.col-xs-offset-6{margin-left:50%}.col-xs-offset-7{margin-left:58.33333333%}.col-xs-offset-8{margin-left:66.66666667%}.col-xs-offset-9{margin-left:75%}.col-xs-offset-10{margin-left:83.33333333%}.col-xs-offset-11{margin-left:91.66666667%}.start-xs{-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;text-align:start}.center-xs{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;text-align:center}.end-xs{-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end;text-align:end}.top-xs{-webkit-box-align:start;-ms-flex-align:start;align-items:flex-start}.middle-xs{-webkit-box-align:center;-ms-flex-align:center;align-items:center}.bottom-xs{-webkit-box-align:end;-ms-flex-align:end;align-items:flex-end}.around-xs{-ms-flex-pack:distribute;justify-content:space-around}.between-xs{-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}.first-xs{-webkit-box-ordinal-group:0;-ms-flex-order:-1;order:-1}.last-xs{-webkit-box-ordinal-group:2;-ms-flex-order:1;order:1}@media only screen and (min-width:48em){.container{width:49rem}.col-sm,.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9,.col-sm-offset-0,.col-sm-offset-1,.col-sm-offset-10,.col-sm-offset-11,.col-sm-offset-12,.col-sm-offset-2,.col-sm-offset-3,.col-sm-offset-4,.col-sm-offset-5,.col-sm-offset-6,.col-sm-offset-7,.col-sm-offset-8,.col-sm-offset-9{box-sizing:border-box;-webkit-box-flex:0;-ms-flex:0 0 auto;flex:none;padding-right:.5rem;padding-left:.5rem}.col-sm{-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;-ms-flex-preferred-size:0;flex-basis:0;max-width:100%}.col-sm-1{-ms-flex-preferred-size:8.33333333%;flex-basis:8.33333333%;max-width:8.33333333%}.col-sm-2{-ms-flex-preferred-size:16.66666667%;flex-basis:16.66666667%;max-width:16.66666667%}.col-sm-3{-ms-flex-preferred-size:25%;flex-basis:25%;max-width:25%}.col-sm-4{-ms-flex-preferred-size:33.33333333%;flex-basis:33.33333333%;max-width:33.33333333%}.col-sm-5{-ms-flex-preferred-size:41.66666667%;flex-basis:41.66666667%;max-width:41.66666667%}.col-sm-6{-ms-flex-preferred-size:50%;flex-basis:50%;max-width:50%}.col-sm-7{-ms-flex-preferred-size:58.33333333%;flex-basis:58.33333333%;max-width:58.33333333%}.col-sm-8{-ms-flex-preferred-size:66.66666667%;flex-basis:66.66666667%;max-width:66.66666667%}.col-sm-9{-ms-flex-preferred-size:75%;flex-basis:75%;max-width:75%}.col-sm-10{-ms-flex-preferred-size:83.33333333%;flex-basis:83.33333333%;max-width:83.33333333%}.col-sm-11{-ms-flex-preferred-size:91.66666667%;flex-basis:91.66666667%;max-width:91.66666667%}.col-sm-12{-ms-flex-preferred-size:100%;flex-basis:100%;max-width:100%}.col-sm-offset-0{margin-left:0}.col-sm-offset-1{margin-left:8.33333333%}.col-sm-offset-2{margin-left:16.66666667%}.col-sm-offset-3{margin-left:25%}.col-sm-offset-4{margin-left:33.33333333%}.col-sm-offset-5{margin-left:41.66666667%}.col-sm-offset-6{margin-left:50%}.col-sm-offset-7{margin-left:58.33333333%}.col-sm-offset-8{margin-left:66.66666667%}.col-sm-offset-9{margin-left:75%}.col-sm-offset-10{margin-left:83.33333333%}.col-sm-offset-11{margin-left:91.66666667%}.start-sm{-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;text-align:start}.center-sm{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;text-align:center}.end-sm{-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end;text-align:end}.top-sm{-webkit-box-align:start;-ms-flex-align:start;align-items:flex-start}.middle-sm{-webkit-box-align:center;-ms-flex-align:center;align-items:center}.bottom-sm{-webkit-box-align:end;-ms-flex-align:end;align-items:flex-end}.around-sm{-ms-flex-pack:distribute;justify-content:space-around}.between-sm{-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}.first-sm{-webkit-box-ordinal-group:0;-ms-flex-order:-1;order:-1}.last-sm{-webkit-box-ordinal-group:2;-ms-flex-order:1;order:1}}@media only screen and (min-width:64em){.container{width:65rem}.col-md,.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9,.col-md-offset-0,.col-md-offset-1,.col-md-offset-10,.col-md-offset-11,.col-md-offset-12,.col-md-offset-2,.col-md-offset-3,.col-md-offset-4,.col-md-offset-5,.col-md-offset-6,.col-md-offset-7,.col-md-offset-8,.col-md-offset-9{box-sizing:border-box;-webkit-box-flex:0;-ms-flex:0 0 auto;flex:none;padding-right:.5rem;padding-left:.5rem}.col-md{-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;-ms-flex-preferred-size:0;flex-basis:0;max-width:100%}.col-md-1{-ms-flex-preferred-size:8.33333333%;flex-basis:8.33333333%;max-width:8.33333333%}.col-md-2{-ms-flex-preferred-size:16.66666667%;flex-basis:16.66666667%;max-width:16.66666667%}.col-md-3{-ms-flex-preferred-size:25%;flex-basis:25%;max-width:25%}.col-md-4{-ms-flex-preferred-size:33.33333333%;flex-basis:33.33333333%;max-width:33.33333333%}.col-md-5{-ms-flex-preferred-size:41.66666667%;flex-basis:41.66666667%;max-width:41.66666667%}.col-md-6{-ms-flex-preferred-size:50%;flex-basis:50%;max-width:50%}.col-md-7{-ms-flex-preferred-size:58.33333333%;flex-basis:58.33333333%;max-width:58.33333333%}.col-md-8{-ms-flex-preferred-size:66.66666667%;flex-basis:66.66666667%;max-width:66.66666667%}.col-md-9{-ms-flex-preferred-size:75%;flex-basis:75%;max-width:75%}.col-md-10{-ms-flex-preferred-size:83.33333333%;flex-basis:83.33333333%;max-width:83.33333333%}.col-md-11{-ms-flex-preferred-size:91.66666667%;flex-basis:91.66666667%;max-width:91.66666667%}.col-md-12{-ms-flex-preferred-size:100%;flex-basis:100%;max-width:100%}.col-md-offset-0{margin-left:0}.col-md-offset-1{margin-left:8.33333333%}.col-md-offset-2{margin-left:16.66666667%}.col-md-offset-3{margin-left:25%}.col-md-offset-4{margin-left:33.33333333%}.col-md-offset-5{margin-left:41.66666667%}.col-md-offset-6{margin-left:50%}.col-md-offset-7{margin-left:58.33333333%}.col-md-offset-8{margin-left:66.66666667%}.col-md-offset-9{margin-left:75%}.col-md-offset-10{margin-left:83.33333333%}.col-md-offset-11{margin-left:91.66666667%}.start-md{-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;text-align:start}.center-md{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;text-align:center}.end-md{-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end;text-align:end}.top-md{-webkit-box-align:start;-ms-flex-align:start;align-items:flex-start}.middle-md{-webkit-box-align:center;-ms-flex-align:center;align-items:center}.bottom-md{-webkit-box-align:end;-ms-flex-align:end;align-items:flex-end}.around-md{-ms-flex-pack:distribute;justify-content:space-around}.between-md{-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}.first-md{-webkit-box-ordinal-group:0;-ms-flex-order:-1;order:-1}.last-md{-webkit-box-ordinal-group:2;-ms-flex-order:1;order:1}}@media only screen and (min-width:75em){.container{width:76rem}.col-lg,.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9,.col-lg-offset-0,.col-lg-offset-1,.col-lg-offset-10,.col-lg-offset-11,.col-lg-offset-12,.col-lg-offset-2,.col-lg-offset-3,.col-lg-offset-4,.col-lg-offset-5,.col-lg-offset-6,.col-lg-offset-7,.col-lg-offset-8,.col-lg-offset-9{box-sizing:border-box;-webkit-box-flex:0;-ms-flex:0 0 auto;flex:none;padding-right:.5rem;padding-left:.5rem}.col-lg{-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;-ms-flex-preferred-size:0;flex-basis:0;max-width:100%}.col-lg-1{-ms-flex-preferred-size:8.33333333%;flex-basis:8.33333333%;max-width:8.33333333%}.col-lg-2{-ms-flex-preferred-size:16.66666667%;flex-basis:16.66666667%;max-width:16.66666667%}.col-lg-3{-ms-flex-preferred-size:25%;flex-basis:25%;max-width:25%}.col-lg-4{-ms-flex-preferred-size:33.33333333%;flex-basis:33.33333333%;max-width:33.33333333%}.col-lg-5{-ms-flex-preferred-size:41.66666667%;flex-basis:41.66666667%;max-width:41.66666667%}.col-lg-6{-ms-flex-preferred-size:50%;flex-basis:50%;max-width:50%}.col-lg-7{-ms-flex-preferred-size:58.33333333%;flex-basis:58.33333333%;max-width:58.33333333%}.col-lg-8{-ms-flex-preferred-size:66.66666667%;flex-basis:66.66666667%;max-width:66.66666667%}.col-lg-9{-ms-flex-preferred-size:75%;flex-basis:75%;max-width:75%}.col-lg-10{-ms-flex-preferred-size:83.33333333%;flex-basis:83.33333333%;max-width:83.33333333%}.col-lg-11{-ms-flex-preferred-size:91.66666667%;flex-basis:91.66666667%;max-width:91.66666667%}.col-lg-12{-ms-flex-preferred-size:100%;flex-basis:100%;max-width:100%}.col-lg-offset-0{margin-left:0}.col-lg-offset-1{margin-left:8.33333333%}.col-lg-offset-2{margin-left:16.66666667%}.col-lg-offset-3{margin-left:25%}.col-lg-offset-4{margin-left:33.33333333%}.col-lg-offset-5{margin-left:41.66666667%}.col-lg-offset-6{margin-left:50%}.col-lg-offset-7{margin-left:58.33333333%}.col-lg-offset-8{margin-left:66.66666667%}.col-lg-offset-9{margin-left:75%}.col-lg-offset-10{margin-left:83.33333333%}.col-lg-offset-11{margin-left:91.66666667%}.start-lg{-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;text-align:start}.center-lg{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;text-align:center}.end-lg{-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end;text-align:end}.top-lg{-webkit-box-align:start;-ms-flex-align:start;align-items:flex-start}.middle-lg{-webkit-box-align:center;-ms-flex-align:center;align-items:center}.bottom-lg{-webkit-box-align:end;-ms-flex-align:end;align-items:flex-end}.around-lg{-ms-flex-pack:distribute;justify-content:space-around}.between-lg{-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}.first-lg{-webkit-box-ordinal-group:0;-ms-flex-order:-1;order:-1}.last-lg{-webkit-box-ordinal-group:2;-ms-flex-order:1;order:1}}</style>
+  
+
+  
+
+  <link href="/index.xml" rel="alternate" type="application/rss+xml"
+    title="Lumen&#39;s Annex">
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css?family=Bree+Serif|Bungee+Shade" rel="stylesheet">
+  
+  
+
+  
+  
+</head>
+
+
+<body>
+  <article class="post Chinese" id="article">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="site-header">
+          
+<header>
+  <div class="header-title">
+    <a href="/"
+      >Lumen&#39;s Annex</a
+    >
+  </div>
+  <div class="header-subtitle">Le vent se lève ，il faut tenter de vivre.</div>
+</header>
+<div class="row end-md center-xs header-items">
+  
+  <div class="header-item">
+    <a href="/about" target="_blank">About</a>
+  </div>
+  
+</div>
+<div class="row end-xs">
+   
+</div>
+<div class="header-line"></div>
+
+        </div>
+        <header class="post-header">
+          <h1 class="post-title">iOS | Router</h1>
+          
+          <div class="row post-desc">
+            <div class="col-xs-6">
+              
+              <time class="post-date" datetime="2021-08-13 00:00:00 UTC">
+                13 Aug 2021
+              </time>
+              
+            </div>
+            <div class="col-xs-6">
+              
+              <div class="post-author">
+                <a target="_blank" href="https://joway.io/">@Lumen</a>
+              </div>
+              
+            </div>
+          </div>
+          
+        </header>
+
+        <div class="post-content markdown-body">
+          
+          <h2 id="路由定义">路由定义</h2>
+<p>简洁来说：路由是一个映射方法。我们将输入的信息以某种特定的方式进行转换，最后输出转换计算后的资源。</p>
+<p>我们用另外一个原理一致的流程来描述这件事情。客户端需要从后端获取数据，我们发出了一条request，后端获取并解析这条request，在他们自己的逻辑中做一些操作（对数据库增删改查），最后输出一条结果，返回给客户端。</p>
+<p>这其实就是一个典型的路由的过程。</p>
+<p>对于后端来说，数据本身就是资源；对于客户端和前端来说，页面就是资源。我们最常见到的一种情况是页面间的路由跳转，实际上可以把它理解成，我们输入了一条想要跳转的路由指令，在客户端内部的映射计算之后，返回了一个结果，这个结果就是一个VC。</p>
+<h2 id="路由用来解决什么问题">路由用来解决什么问题</h2>
+<ul>
+<li>页面间的耦合。以上面的情况来说，如果我们通过navigationController来惊醒页面间的跳转，就势必在一个VC中引入另一个VC。这就造成了耦合。那么再假设，iOS上支持3D touch，很可能用户会一下就跳进一个非常深的页面。这样的耦合就很恐怖。</li>
+<li>组件间的耦合。随着业务的发展，组件之间的耦合也十分容易产生。好的组件应当尽量避免组件之间的耦合。</li>
+</ul>
+<h2 id="ios-app之间的跳转">iOS APP之间的跳转</h2>
+<p>再进一步的研究之前，让我们首先看看iOS的APP之间是如何跳转的。这或许对我们有一些启示。</p>
+<p>iOS APP之间的跳转有两种方式：URL Scheme和Universal Link。</p>
+<p>URL Scheme是每个APP可以提供一个URL，直接在浏览器中输入URL就可以跳转打开对应的APP。这个scheme是可以在info.plist里面去配的。</p>
+<h2 id="如何设计好的路由">如何设计好的路由</h2>
+<p>路由最主要实现的功能：</p>
+<ul>
+<li>注册路由</li>
+<li>管理路由资源</li>
+<li>匹配和派发资源</li>
+</ul>
+<p>做的好的路由应当是没有感知的，悄无声息的就帮助系统完成了互相连接的工作。这样的设计自然比较困按钮，我们从几个例子来看看路由的设计方式</p>
+<h3 id="jlroutes">JLRoutes</h3>
+<p>JLRoutes存储了一个全局的map，这个Map会以scheme为Key，JLRoutes为Value。所以在routeControllerMap里面每个scheme都是唯一的。</p>
+<p>JLRoutes里面会保存一个数组，数组内部存储了路由规则里面包含的外部传入的闭包，并且会根据优先级进行排序路由。所以实际上，JLRoute内部维护了一个单调队列，所以再插入路由的时候直接顺序遍历就可以了。</p>
+<p><img src="iOS%20Router%2021d819200c3149c6ac7ee80bde43471e/%E6%88%AA%E5%B1%8F2021-08-17_20.03.20.png" alt="截屏2021-08-17 20.03.20.png"></p>
+<p>这是存储和注册的过程。那么怎么进行查询和映射呢？JLRoutes会根据外部传入的URL和一些额外的参数构建一个request。这个请求会在当前的JLRoute的路由数组内依次的请求，数组内部的每一个规则会生成一个response。只有符合条件的response才可以match，最后找到匹配的response，从里面的字典参数取出来返回即可。</p>
+<p>优点：</p>
+<ul>
+<li>能匹配多种不同规则的 URL，可以定义自定义的匹配规则、匹配逻辑</li>
+<li>可以指定每个路由的优先级</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>当注册的 URL 比较多时，匹配效率比较低。</li>
+</ul>
+<h3 id="a-router">A Router</h3>
+<p>A的router主要分为两个过程，注册和路由跳转。A的注册是懒注册的，在第一次使用该路由的时候，如果没在全局的映射表中找到对应的路由，那么就会开始注册。所有的路由信息都是写入到Data段内，直接从中读取。</p>
+<h3 id="参考文献">参考文献</h3>
+<p><a href="https://github.com/halfrost/Halfrost-Field/blob/master/contents/iOS/iOSRouter/iOS_Router.md">Halfrost-Field/iOS_Router.md at master · halfrost/Halfrost-Field</a></p>
+
+        </div>
+
+        <div class="row middle-xs">
+          <div class="col-xs-12">
+            
+          </div>
+        </div>
+        
+          <div class="row">
+            <div class="col-xs-12">
+              
+            </div>
+          </div>
+
+          
+
+
+
+          
+          
+          <div style="height: 50px;"></div>
+          
+          <div class="post-comments">
+            <div id="disqus_thread"></div>
+<script>
+  window.addEventListener("load", () => {
+    (function() {
+      
+      var d = document,
+        s = d.createElement("script");
+      s.src = "https://Lumen.disqus.com/embed.js";
+      s.setAttribute("data-timestamp", +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  });
+</script>
+<noscript
+  >Please enable JavaScript to view the
+  <a href="https://disqus.com/?ref_noscript"
+    >comments powered by Disqus.</a
+  ></noscript
+>
+
+          </div>
+          
+        
+
+        <div class="site-footer">
+  
+  
+</div>
+
+      </div>
+    </div>
+  </article>
+
+  
+<script src="/js/lazyload.min.js"></script>
+<script>
+  var lazyImage = new LazyLoad({
+    container: document.getElementById('article')
+  });
+</script>
+
+<script>
+  
+  
+    
+    
+  
+</script>
+
+  
+
+</body>
+
+</html>

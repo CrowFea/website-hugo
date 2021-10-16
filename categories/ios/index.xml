@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>iOS on Lumen&#39;s Annex</title>
+    <link>http://example.org/categories/ios/</link>
+    <description>Recent content in iOS on Lumen&#39;s Annex</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 24 Sep 2021 00:00:00 +0000</lastBuildDate><atom:link href="http://example.org/categories/ios/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>iOS | Method Swizzle</title>
+      <link>http://example.org/posts/method-swizzle/</link>
+      <pubDate>Fri, 24 Sep 2021 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/method-swizzle/</guid>
+      <description>iOS中Method swizzling的使用
+掘金
+OC的runtime十分的强大，其中一个灵活的黑魔法就是Method Swizzle。
+Swizzle的本质是：在运行时交换方法的实现（IMP）。灵活的使用swizzle，可以达到hook的效果，开发者可以hook住系统的方法或者生命周期，来做一些自定义的操作。
+原理 Objective-C的消息机制：在 Objective-C 中调用一个方法， 实际上是在底层通过 objc_msgSend()发送一个消息。 而查找消息的唯一依据是selector的方法名。
+[obj doSomething]; /// =&amp;gt; objc_msgSend(obj,@selector(doSomething))  每一个OC实例对象都保存有isa指针和实例变量，其中isa指针所属类，类维护一个运行时可接收的方法列表(MethodLists)； 方法列表(MethodLists)中保存selector &amp;amp; IMP的映射关系。在运行时，通过selecter找到匹配的IMP，从而找到的具体的实现函数。
+开发中可以利用Objective-C的动态特性，在运行时替换selector对应的方法实现（IMP），达到给hook的目的。下图是利用 Method Swizzle 来替换selector对应IMP后的方法列表示意图。
+Method%20Swizzle%2076aa8a50bd07495cae3a80f89563d2f0/16b06aaf3816730ctplv-t2oaga2asx-watermark.awebp
+使用时注意   在使用swizzle的时候，可以在category中实现
+  swizzling 应该只在 dispatch_once 中完成
+由于 swizzling 改变了全局的状态，所以我们需要确保每个预防措施在运行时都是可用的。原子操作就是这样一个用于确保代码只会被执行一次的预防措施，就算是在不同的线程中也能确保代码只执行一次。Grand Central Dispatch 的 dispatch_once 满足了所需要的需求，并且应该被当做使用 swizzling 的初始化单例方法的标准。
+  swizzling 应该只在 +load 中完成
+在 Objective-C 的运行时中，每个类有两个方法都会自动调用。+load 是在一个类被初始装载时调用，+initialize 是在应用第一次调用该类的类方法或实例方法前调用的。两个方法都是可选的，并且只有在方法被实现的情况下才会被调用。
+  要记得调用原来的方法
+下面代码在正常情况下会出现循环：
+- (void)xxx_viewWillAppear:(BOOL)animated { [self xxx_viewWillAppear:animated]; NSLog(@&amp;#34;viewWillAppear: %@&amp;#34;, NSStringFromClass([self class])); } 然而在交换了方法实现后就不会出现循环了。好的程序员应该对这里出现的方法的递归调用有所警觉，这里我们应该理清在 method swizzling 后方法的实现究竟变成了什么。在交换了方法的实现后，xxx_viewWillAppear:方法的实现已经被替换为了 UIViewController -viewWillAppear：的原生实现，所以这里并不是在递归调用。由于 xxx_viewWillAppear: 这个方法的实现已经被替换为了 viewWillAppear: 的实现，所以，当我们在这个方法中再调用 viewWillAppear: 时便会造成递归循环。</description>
+    </item>
+    
+    <item>
+      <title>iOS｜无障碍 &amp; 适老化</title>
+      <link>http://example.org/posts/%E6%97%A0%E9%9A%9C%E7%A2%8D-%E9%80%82%E8%80%81%E5%8C%96/</link>
+      <pubDate>Thu, 23 Sep 2021 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/%E6%97%A0%E9%9A%9C%E7%A2%8D-%E9%80%82%E8%80%81%E5%8C%96/</guid>
+      <description>背景 
+微信、支付宝等 43 个 APP 将进行适老化及无障碍改造，如何评价这一举动？具有什么样的社会意义?
+👆此为背景，非常明确。GR需求永远是P00级别的需求。
+改造实际上分为两个部分，1⃣️ 无障碍：指的是对于残障人士，特别是视力障碍人士的使用体验改造。具体的表现是，点击屏幕上的元素会发出声音提示；2⃣️ 适老化：指的是对于老年人的使用体验改造。目前的表现是：字体放大。简单粗暴。当然，真正的适老化改造应该从产品形态上做出调整，从设计上更方便老年人使用，而不是单纯的放大字体。
+适老化 首先看一下适老化的部分。这部分相对简单，毕竟只需要把字体设置一下就可以。这里我们的诉求有两个：
+ 可以区分是不是适老化模式 各业务尽可能方便的接入，并且侵入性较小  直接来看方案，将所有的判断 &amp;amp; 放大算法 &amp;amp; 放大倍数等属性都抽出放在一个manager中。接下来对UIFont做一个category，里面包含设置字体的防范。方法最好是包装成内部处理是否适老化的，而不用外部传入。因为适老化应该是全局打开的一个开关。外部直接调用设置字体的方法，这个方法内部会判决是不是需要进行相应的放大。
+无障碍 API 无障碍的部分相对麻烦。在iOS上，我们主要是使用系统提供的功能：「旁白」，以及相对应的API：UIAccessibility.
+UIAccessibility实际上是NSObject的一个category，因此大部分系统的组件都是有相对应的属性。我们在下面列一下主要会用到的几个属性：
+Untitled
+掘金
+iOS无障碍适配总结 | 轻舟半尺
+详细的介绍可以看👆两篇文章。
+手势 如果你是第一次打开iOS的「旁白」模式，一定会一脸懵逼。适应该模式下的操作需要一定的时间。我们大概描述一下基本的手势操作：
+ 轻点一下：轻点的元素将被设为焦点，并朗读。在屏幕上的任何手势操作（除了轻点一下别的元素），都是对该焦点元素，或者以该焦点元素为基准的操作 轻点两下：对焦点元素进行操作，并将朗读accessibilityHint。 单指左右滑动：当前焦点元素的上一个（左滑）/下一个（右滑）被设为焦点，并朗读。 单指拖拽：随手指滑动选择焦点。 三指轻扫：滑动。 没有Home键的Home out：很精妙的操作。首先你需要从下往上，慢慢滑动。当你感觉到有一次震动，松开。此时就是Home out。若你继续往上滑，感觉到两次震动，松开，就是打开多任务视图。  元素顺序 前面我们提到了单指左右滑动，会自动选择上一个/下一个元素。这里就势必有一个顺序问题。
+如果当前的页面没有显式的指定元素的顺序的时候，元素的顺序是由上到下，由左到右，由高到低。因此真正的顺序和用户看到的并不一样。
+当然我们可以手动的设置顺序，对父View设置accessibilityElements。这是一个数组，数组中依次设置好元素的顺序即可。
+⚠️坑
+这里有个坑，如果某个元素的高度为0，那么手势滑动走到这个元素的下一个就会卡住。无法再滑动。这种情况下就需要把它hidden掉，或者设置他的isAccessibilityElement为NO。
+聚合朗读 有时我们的一个元素内有多个小的元素。在朗读时希望聚合在一起朗读。可以把父View的朗读标签直接设置成所有子元素的标签即可。</description>
+    </item>
+    
+    <item>
+      <title>iOS | Router</title>
+      <link>http://example.org/posts/ios-router/</link>
+      <pubDate>Fri, 13 Aug 2021 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/ios-router/</guid>
+      <description>路由定义 简洁来说：路由是一个映射方法。我们将输入的信息以某种特定的方式进行转换，最后输出转换计算后的资源。
+我们用另外一个原理一致的流程来描述这件事情。客户端需要从后端获取数据，我们发出了一条request，后端获取并解析这条request，在他们自己的逻辑中做一些操作（对数据库增删改查），最后输出一条结果，返回给客户端。
+这其实就是一个典型的路由的过程。
+对于后端来说，数据本身就是资源；对于客户端和前端来说，页面就是资源。我们最常见到的一种情况是页面间的路由跳转，实际上可以把它理解成，我们输入了一条想要跳转的路由指令，在客户端内部的映射计算之后，返回了一个结果，这个结果就是一个VC。
+路由用来解决什么问题  页面间的耦合。以上面的情况来说，如果我们通过navigationController来惊醒页面间的跳转，就势必在一个VC中引入另一个VC。这就造成了耦合。那么再假设，iOS上支持3D touch，很可能用户会一下就跳进一个非常深的页面。这样的耦合就很恐怖。 组件间的耦合。随着业务的发展，组件之间的耦合也十分容易产生。好的组件应当尽量避免组件之间的耦合。  iOS APP之间的跳转 再进一步的研究之前，让我们首先看看iOS的APP之间是如何跳转的。这或许对我们有一些启示。
+iOS APP之间的跳转有两种方式：URL Scheme和Universal Link。
+URL Scheme是每个APP可以提供一个URL，直接在浏览器中输入URL就可以跳转打开对应的APP。这个scheme是可以在info.plist里面去配的。
+如何设计好的路由 路由最主要实现的功能：
+ 注册路由 管理路由资源 匹配和派发资源  做的好的路由应当是没有感知的，悄无声息的就帮助系统完成了互相连接的工作。这样的设计自然比较困按钮，我们从几个例子来看看路由的设计方式
+JLRoutes JLRoutes存储了一个全局的map，这个Map会以scheme为Key，JLRoutes为Value。所以在routeControllerMap里面每个scheme都是唯一的。
+JLRoutes里面会保存一个数组，数组内部存储了路由规则里面包含的外部传入的闭包，并且会根据优先级进行排序路由。所以实际上，JLRoute内部维护了一个单调队列，所以再插入路由的时候直接顺序遍历就可以了。
+这是存储和注册的过程。那么怎么进行查询和映射呢？JLRoutes会根据外部传入的URL和一些额外的参数构建一个request。这个请求会在当前的JLRoute的路由数组内依次的请求，数组内部的每一个规则会生成一个response。只有符合条件的response才可以match，最后找到匹配的response，从里面的字典参数取出来返回即可。
+优点：
+ 能匹配多种不同规则的 URL，可以定义自定义的匹配规则、匹配逻辑 可以指定每个路由的优先级  缺点：
+ 当注册的 URL 比较多时，匹配效率比较低。  A Router A的router主要分为两个过程，注册和路由跳转。A的注册是懒注册的，在第一次使用该路由的时候，如果没在全局的映射表中找到对应的路由，那么就会开始注册。所有的路由信息都是写入到Data段内，直接从中读取。
+参考文献 Halfrost-Field/iOS_Router.md at master · halfrost/Halfrost-Field</description>
+    </item>
+    
+    <item>
+      <title>iOS ｜ 玩转系统相册</title>
+      <link>http://example.org/posts/%E7%8E%A9%E8%BD%AC%E7%B3%BB%E7%BB%9F%E7%9B%B8%E5%86%8C/</link>
+      <pubDate>Sun, 25 Jul 2021 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/%E7%8E%A9%E8%BD%AC%E7%B3%BB%E7%BB%9F%E7%9B%B8%E5%86%8C/</guid>
+      <description>背景 需求是要读取用户的相册，通过一定的策略进行展示，并且允许用户去多选照片进行后续的操作，具体的几项要求是
+ 优先读取截图文件夹，没有的话读取recent 展示顺序是时间由新到旧 用户对相册的改变实时更新到屏幕  在实际开发中遇到了以下这些问题
+ 无法获取正确的图片顺序 监听系统相册带来的问题 大量图片如何加载 异步加载图片导致错乱  关于相册的常用方法和类 关于图片的方法都集中在Photos这个系统库中，几个常用的方法和类如下
+PHPhotoLibrary PHPhotoLibrary是获取图片的接口，类似Metal的MTLDevice。
+//获取图片的接口 @available(iOS 8, *) open class PHPhotoLibrary : NSObject { @available(iOS 8, *) open class func shared() -&amp;gt; PHPhotoLibrary //返回当前的授权状态 @available(iOS 8, *) open class func authorizationStatus() -&amp;gt; PHAuthorizationStatus //申请权限 @available(iOS 8, *) open class func requestAuthorization(_ handler: @escaping (PHAuthorizationStatus) -&amp;gt; Void) //存储app内对照片的修改 // handlers are invoked on an arbitrary serial queue // Nesting change requests will throw an exception @available(iOS 8, *) open func performChanges(_ changeBlock: @escaping () -&amp;gt; Void, completionHandler: ((Bool, Error?</description>
+    </item>
+    
+    <item>
+      <title>iOS 丨 响应链</title>
+      <link>http://example.org/posts/%E5%93%8D%E5%BA%94%E9%93%BE/</link>
+      <pubDate>Sat, 07 Nov 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/%E5%93%8D%E5%BA%94%E9%93%BE/</guid>
+      <description>背景 最近接连几个需求都碰到了在响应链上的问题。有的是因为点击事件透传到superview，有的是因为子View将事件过早的拦截。针对一些具体的情况，我们对响应链相关的知识总结一下。
+响应链 关于响应链具体是什么，有很多文章都写到了，这里不再赘述。附上Google搜索出来排名很高的两篇文章，基本上把知识点都囊括了。iOS响应链(Responder Chain) - 简书 iOS 中事件的响应链和传递链 | Gsl’s Library。
+简单描述一下，基本上是以下的过程：
+ 点击屏幕产生触摸事件，系统将这个事件加入到一个由UIApplication管理的事件队列中，UIApplication会从队列里取事件分发下去，首先传给UIWindow 在UIWindow中就会调用hitTest:withEvent:方法去返回一个最终响应的视图 在hitTest:withEvent:方法中就会去调用pointInside: withEvent:去判断当前点击的point是否在UIWindow范围内，如果是的话，就会去遍历它的子视图来查找最终响应的子视图 遍历的方式是使用倒序的方式来遍历子视图，也就是说最后添加的子视图会最先遍历，在每一个视图中都回去调用它的hitTest:withEvent:方法，可以理解为是一个递归调用 最终会返回一个响应视图，如果返回视图有值，那么这个视图就作为最终响应视图，结束整个事件传递；如果没有值，那么就会将UIWindow作为响应者  这里有几点要注意的。首先是所有的交互事件是放在一个队列中管理的。为什么是队列？先发生的交互应当先被处理，这符合预期。这其实也能理解为什么有时候会觉得卡顿。当响应这些交互事件的时间要高于我们的反应时间时，就会觉得卡顿。当这个时间要高于我们两次交互的时间时，就会有卡死的感觉。其次，响应链对于view的遍历顺序，应当是一个树的深度遍历方式。这也就解释了为什么是最高层的UIApplication发起的遍历，但是会是最后添加的子view率先响应的问题。同样这也是符合预期的，当我们对页面发起交互事件的时候，点击的对象自然是“离我们最近的”子view。
+原理看起来比较简单，我们碰到的主要问题是，响应链什么时候传了下去，什么时候又被拦截掉了。接下来看两个具体的例子。
+问题 scrollView无法滑动 我们设置了三层view。底层的父view是一个scrollView，在其上有一个headerView，在headerView上有一个自定义的View作为button。这三个View都是UIView。在headerView中我们可能展示一些图片之类的资源。想要的效果是：在headerView中依然可以滑动，同时headerView中的按钮是可以点击的。
+在整个需求做完之后首先碰到的问题是，headerView并不能滑动。这是因为UIView并不处理滑动手势。并且滑动的手势并不会回传给superView。这是因为响应链和手势识别并不是一套系统。
+ A window delays the delivery of touch objects to the view so that the gesture recognizer can analyze the touch first. During the delay, if the gesture recognizer recognizes a touch gesture, then the window never delivers the touch object to the view, and also cancels any touch objects it previously sent to the view that were part of that recognized sequence.</description>
+    </item>
+    
+    <item>
+      <title>iOS 丨 频控问题</title>
+      <link>http://example.org/posts/%E9%A2%91%E6%8E%A7%E9%97%AE%E9%A2%98/</link>
+      <pubDate>Sat, 31 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/%E9%A2%91%E6%8E%A7%E9%97%AE%E9%A2%98/</guid>
+      <description>背景 客户端有时监听了若干状态。比如不同的VIP状态等，在每次监听改变的时候可能需要重新向后端发请求。这样可能产生的情况是，当某个状态发生改变的时候，多个地方都会监听到，这样可能导致短时间内发出大量相同请求。后端可能进行了频控，这样就会导致拿不到数据展示错误的样式。
+debounce &amp;amp; Throttle 前端可能会经常使用的两个方法：防抖和节流。可以在这个场景内去使用。
+debounce方法的作用是，在触发方法后的一段时间内，才真正的调用方法。如果在等待的时间内重新有新的触发，那么就会重新计算时间。Throttle方法的作用是，在一段时间内对方法的触发会压缩为一个。
+在这个情况下，我们可以使用throttle的方法，在一段时间内的响应，只发送一个请求。
+实现 RxSwift 有两种实现的方法。因为项目是用swift开发的，可以直接引入RxSwift库，GitHub - ReactiveX/RxSwift: Reactive Programming in Swift。
+private let vipChangePublishSubJect = PublishSubject&amp;lt;Void&amp;gt;() private let disposeBag = DisposeBag() vipChangePublishSubJect .debounce(.milliseconds(200), scheduler: MainScheduler.instance) .subscribe {[weak self] (_) in //action }.disposed(by: disposeBag) 在我们当前的业务场景下，这不见得是非常好的一种做法。使用这种方法意味着要在每一个业务场景去进行单独的设置，这样显然是不好的做法。在我们的业务中，会发生频控的原因在于，业务场景需要监听权益的变化，在权益变化的时候发送请求对用户看到的内容进行刷新。权益本身的变化可能有多个，其中的一个权益内容发生变化可能会重新发送一次请求。最好的做法是，我们在源头，也就是在监听权益内容的地方进行限流。
+自己实现 自己实现一个debounce方法。这里有意思的一点在于，虽然说的是debounce方法，但实际上却是Throttle。本质上是将一段时间内的方法触发delay，这段时间内对方法的额外触发将不会重新的触发方法。
+要实现这个方法，我们可以使用Dispatchworkitem来实现。本质思路是，因为可能涉及到多个权益切换的监听，每一种切换可能发送出去不同的请求。因此要对不同的切换进行不同的响应。因此还需要使用associate进行关联。
+private func vipChangeDebounce() -&amp;gt; DispatchWorkItem { let workItem: DispatchWorkItem? = getAssociated(associatedKey: &amp;amp;Key) if let result = workItem { result.cancel() return result } else { let workItem: DispatchWorkItem = DispatchWorkItem(block: { [weak self] in delay(0.</description>
+    </item>
+    
+    <item>
+      <title>iOS 丨 使用AVPlayer播放视频</title>
+      <link>http://example.org/posts/%E4%BD%BF%E7%94%A8avplayer%E6%92%AD%E6%94%BE%E8%A7%86%E9%A2%91/</link>
+      <pubDate>Tue, 08 Sep 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/%E4%BD%BF%E7%94%A8avplayer%E6%92%AD%E6%94%BE%E8%A7%86%E9%A2%91/</guid>
+      <description>&lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
+&lt;p&gt;播放视频，一个听起来十分合理的需求。iOS提供了AVFoundation，其中的AVPlayer提供了播放视频的能力。在使用的时候我们碰到了一些问题，记录如下。&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>iOS 丨 扩大点击区域</title>
+      <link>http://example.org/posts/%E6%89%A9%E5%A4%A7%E7%82%B9%E5%87%BB%E5%8C%BA%E5%9F%9F/</link>
+      <pubDate>Mon, 07 Sep 2020 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/posts/%E6%89%A9%E5%A4%A7%E7%82%B9%E5%87%BB%E5%8C%BA%E5%9F%9F/</guid>
+      <description>&lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
+&lt;p&gt;有时UE给出的设计稿看起来很美观，对于用户来说并不是那么方便的进行操作。按钮可能小了容易误触，或者不容易触发。开发就需要灵活的去增大某个控件的点击区域，在这里总结一下可以使用的方法。&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

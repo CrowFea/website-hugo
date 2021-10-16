@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="Hugo 0.88.1" />
+
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="Lumen" />
+  <meta property="og:url" content="http://example.org/posts/%E9%A2%91%E6%8E%A7%E9%97%AE%E9%A2%98/" />
+  <link rel="canonical" href="http://example.org/posts/%E9%A2%91%E6%8E%A7%E9%97%AE%E9%A2%98/" /><link rel="apple-touch-icon" href="/logo.png" />
+  <link rel="icon" href="/logo.png" />
+  <link rel="shortcut" href="/logo.png" /><link rel="alternate" type="application/atom+xml" href="http://example.org/index.xml" title="Lumen&#39;s Annex">
+
+  <script type="application/ld+json">
+  {
+      "@context" : "http://schema.org",
+      "@type" : "BlogPosting",
+      "mainEntityOfPage": {
+           "@type": "WebPage",
+           "@id": "http:\/\/example.org\/"
+      },
+      "articleSection" : "posts",
+      "name" : "iOS 丨 频控问题",
+      "headline" : "iOS 丨 频控问题",
+      "description" : "背景 客户端有时监听了若干状态。比如不同的VIP状态等，在每次监听改变的时候可能需要重新向后端发请求。这样可能产生的情况是，当某个状态发生改变的时候，多个地方都会监听到，这样可能导致短时间内发出大量相同请求。后端可能进行了频控，这样就会导致拿不到数据展示错误的样式。\ndebounce \u0026amp; Throttle 前端可能会经常使用的两个方法：防抖和节流。可以在这个场景内去使用。\ndebounce方法的作用是，在触发方法后的一段时间内，才真正的调用方法。如果在等待的时间内重新有新的触发，那么就会重新计算时间。Throttle方法的作用是，在一段时间内对方法的触发会压缩为一个。\n在这个情况下，我们可以使用throttle的方法，在一段时间内的响应，只发送一个请求。\n实现 RxSwift 有两种实现的方法。因为项目是用swift开发的，可以直接引入RxSwift库，GitHub - ReactiveX\/RxSwift: Reactive Programming in Swift。\nprivate let vipChangePublishSubJect = PublishSubject\u0026lt;Void\u0026gt;() private let disposeBag = DisposeBag() vipChangePublishSubJect .debounce(.milliseconds(200), scheduler: MainScheduler.instance) .subscribe {[weak self] (_) in \/\/action }.disposed(by: disposeBag) 在我们当前的业务场景下，这不见得是非常好的一种做法。使用这种方法意味着要在每一个业务场景去进行单独的设置，这样显然是不好的做法。在我们的业务中，会发生频控的原因在于，业务场景需要监听权益的变化，在权益变化的时候发送请求对用户看到的内容进行刷新。权益本身的变化可能有多个，其中的一个权益内容发生变化可能会重新发送一次请求。最好的做法是，我们在源头，也就是在监听权益内容的地方进行限流。\n自己实现 自己实现一个debounce方法。这里有意思的一点在于，虽然说的是debounce方法，但实际上却是Throttle。本质上是将一段时间内的方法触发delay，这段时间内对方法的额外触发将不会重新的触发方法。\n要实现这个方法，我们可以使用Dispatchworkitem来实现。本质思路是，因为可能涉及到多个权益切换的监听，每一种切换可能发送出去不同的请求。因此要对不同的切换进行不同的响应。因此还需要使用associate进行关联。\nprivate func vipChangeDebounce() -\u0026gt; DispatchWorkItem { let workItem: DispatchWorkItem? = getAssociated(associatedKey: \u0026amp;Key) if let result = workItem { result.cancel() return result } else { let workItem: DispatchWorkItem = DispatchWorkItem(block: { [weak self] in delay(0.",
+      "inLanguage" : "en-US",
+      "author" : "Lumen",
+      "creator" : "Lumen",
+      "publisher": "Lumen",
+      "accountablePerson" : "Lumen",
+      "copyrightHolder" : "Lumen",
+      "copyrightYear" : "2020",
+      "datePublished": "2020-10-31 00:00:00 \u002b0000 UTC",
+      "dateModified" : "2020-10-31 00:00:00 \u002b0000 UTC",
+      "url" : "http:\/\/example.org\/posts\/%E9%A2%91%E6%8E%A7%E9%97%AE%E9%A2%98\/",
+      "keywords" : [  ]
+  }
+</script>
+<title>iOS 丨 频控问题</title>
+  <meta property="og:title" content="iOS 丨 频控问题" />
+  <meta property="og:type" content="article" />
+  <meta property="og:description" content="背景 客户端有时监听了若干状态。比如不同的VIP状态等，在每次监听改变的时候可能需要重新向后端发请求。这样可能产生的情况是，当某个状态发生改变的时候，多个地方都会监听到，这样可能导致短时间内发出大量相同请求。后端可能进行了频控，这样就会导致拿不到数据展示错误的样式。
+debounce &amp;amp; Throttle 前端可能会经常使用的两个方法：防抖和节流。可以在这个场景内去使用。
+debounce方法的作用是，在触发方法后的一段时间内，才真正的调用方法。如果在等待的时间内重新有新的触发，那么就会重新计算时间。Throttle方法的作用是，在一段时间内对方法的触发会压缩为一个。
+在这个情况下，我们可以使用throttle的方法，在一段时间内的响应，只发送一个请求。
+实现 RxSwift 有两种实现的方法。因为项目是用swift开发的，可以直接引入RxSwift库，GitHub - ReactiveX/RxSwift: Reactive Programming in Swift。
+private let vipChangePublishSubJect = PublishSubject&amp;lt;Void&amp;gt;() private let disposeBag = DisposeBag() vipChangePublishSubJect .debounce(.milliseconds(200), scheduler: MainScheduler.instance) .subscribe {[weak self] (_) in //action }.disposed(by: disposeBag) 在我们当前的业务场景下，这不见得是非常好的一种做法。使用这种方法意味着要在每一个业务场景去进行单独的设置，这样显然是不好的做法。在我们的业务中，会发生频控的原因在于，业务场景需要监听权益的变化，在权益变化的时候发送请求对用户看到的内容进行刷新。权益本身的变化可能有多个，其中的一个权益内容发生变化可能会重新发送一次请求。最好的做法是，我们在源头，也就是在监听权益内容的地方进行限流。
+自己实现 自己实现一个debounce方法。这里有意思的一点在于，虽然说的是debounce方法，但实际上却是Throttle。本质上是将一段时间内的方法触发delay，这段时间内对方法的额外触发将不会重新的触发方法。
+要实现这个方法，我们可以使用Dispatchworkitem来实现。本质思路是，因为可能涉及到多个权益切换的监听，每一种切换可能发送出去不同的请求。因此要对不同的切换进行不同的响应。因此还需要使用associate进行关联。
+private func vipChangeDebounce() -&amp;gt; DispatchWorkItem { let workItem: DispatchWorkItem? = getAssociated(associatedKey: &amp;amp;Key) if let result = workItem { result.cancel() return result } else { let workItem: DispatchWorkItem = DispatchWorkItem(block: { [weak self] in delay(0." />
+  <meta name="description" content="背景 客户端有时监听了若干状态。比如不同的VIP状态等，在每次监听改变的时候可能需要重新向后端发请求。这样可能产生的情况是，当某个状态发生改变的时候，多个地方都会监听到，这样可能导致短时间内发出大量相同请求。后端可能进行了频控，这样就会导致拿不到数据展示错误的样式。
+debounce &amp;amp; Throttle 前端可能会经常使用的两个方法：防抖和节流。可以在这个场景内去使用。
+debounce方法的作用是，在触发方法后的一段时间内，才真正的调用方法。如果在等待的时间内重新有新的触发，那么就会重新计算时间。Throttle方法的作用是，在一段时间内对方法的触发会压缩为一个。
+在这个情况下，我们可以使用throttle的方法，在一段时间内的响应，只发送一个请求。
+实现 RxSwift 有两种实现的方法。因为项目是用swift开发的，可以直接引入RxSwift库，GitHub - ReactiveX/RxSwift: Reactive Programming in Swift。
+private let vipChangePublishSubJect = PublishSubject&amp;lt;Void&amp;gt;() private let disposeBag = DisposeBag() vipChangePublishSubJect .debounce(.milliseconds(200), scheduler: MainScheduler.instance) .subscribe {[weak self] (_) in //action }.disposed(by: disposeBag) 在我们当前的业务场景下，这不见得是非常好的一种做法。使用这种方法意味着要在每一个业务场景去进行单独的设置，这样显然是不好的做法。在我们的业务中，会发生频控的原因在于，业务场景需要监听权益的变化，在权益变化的时候发送请求对用户看到的内容进行刷新。权益本身的变化可能有多个，其中的一个权益内容发生变化可能会重新发送一次请求。最好的做法是，我们在源头，也就是在监听权益内容的地方进行限流。
+自己实现 自己实现一个debounce方法。这里有意思的一点在于，虽然说的是debounce方法，但实际上却是Throttle。本质上是将一段时间内的方法触发delay，这段时间内对方法的额外触发将不会重新的触发方法。
+要实现这个方法，我们可以使用Dispatchworkitem来实现。本质思路是，因为可能涉及到多个权益切换的监听，每一种切换可能发送出去不同的请求。因此要对不同的切换进行不同的响应。因此还需要使用associate进行关联。
+private func vipChangeDebounce() -&amp;gt; DispatchWorkItem { let workItem: DispatchWorkItem? = getAssociated(associatedKey: &amp;amp;Key) if let result = workItem { result.cancel() return result } else { let workItem: DispatchWorkItem = DispatchWorkItem(block: { [weak self] in delay(0." />
+  <meta property="og:locale" content="en-us" />
+
+  
+    <style>body{font-family:bree serif,sans-serif;-webkit-font-smoothing:antialiased;margin:0 20px}article{max-width:800px;margin-left:auto;margin-right:auto}a{color:#000;text-decoration:none}a:hover{font-weight:600;text-decoration:underline}.post-ads{margin:50px 0}.markdown-body{font-size:18px;max-width:100%}.markdown-body a{text-decoration:underline;text-decoration-color:#000}.markdown-body pre{padding:16px;overflow:auto;border-radius:10px}.markdown-body code{padding:.2em .4em;font-size:85%;background-color:#f6f8fa;border-radius:6px}.markdown-body pre>code{padding:0;font-size:100%;background-color:inherit;border:0}.Chinese .markdown-body{line-height:200%}.site-date-catalog{font-size:2rem}.header-title{font-size:2rem;font-weight:700;margin-top:32px;font-family:bungee shade,sans-serif}.header-title a{text-decoration:none}.header-subtitle{color:#666}.header-items{margin:10px 0}.header-item{margin:0 5px}.header-line{width:100%;border-width:2px;border-color:#482936;border-style:solid none none none}.lang-switch{font-weight:600}#posts-list{min-height:600px}.posts-line{font-size:1.2rem;margin:12px 0}.posts-categories{font-size:.8rem;margin:auto;text-align:center}.posts-category{padding:3px 0;border:#000 2px solid;border-radius:5px}.site-footer{margin-top:50px}.site-footer-item{margin-right:12px}.post-content img{max-width:100%;display:block;margin-right:auto;margin-top:12px}.post-header{margin-bottom:50px}.post-title{font-size:2rem;font-weight:600}.post-tags{display:inline;font-weight:600;padding:2px 5px;margin-right:6px;border:#000 2px solid;border-radius:5px}.post-date{font-weight:800;font-style:italic}.post-author{float:right;font-weight:600}.page-content{min-height:60%}.post-content{margin-bottom:50px}.post-content p{hyphens:auto;line-height:1.8;text-justify:ideographic;margin-bottom:1em}.related-content{border-width:3px;border-style:solid;border-color:#000;padding:0 10px;margin-bottom:50px;margin-top:100px}.related-content li{margin:5px 0}.taxonomy-term{font-size:3rem}.gallery-img{text-align:center}.gallery-img span{text-align:center}.gallery-img-desc{font-size:.8em;font-weight:800}#disqus_thread{position:relative}#disqus_thread:after{content:"";display:block;height:55px;width:100%;position:absolute;bottom:0;background:#fff}@media screen and (max-width:600px){.header-title,.header-subtitle,.header-items{text-align:center}.posts-line{font-size:16px}.markdown-body{font-size:16px}.post-title{font-size:2rem}.post-content p{letter-spacing:.05em}}@media screen and (max-width:48em){.posts-category{display:none}}</style>
+  
+  
+    <style>.container,.container-fluid{margin-right:auto;margin-left:auto}.container-fluid{padding-right:2rem;padding-left:2rem}.row{box-sizing:border-box;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-flex:0;-ms-flex:0 1 auto;flex:initial;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;-ms-flex-wrap:wrap;flex-wrap:wrap;margin-right:-.5rem;margin-left:-.5rem}.row.reverse{-webkit-box-orient:horizontal;-webkit-box-direction:reverse;-ms-flex-direction:row-reverse;flex-direction:row-reverse}.col.reverse{-webkit-box-orient:vertical;-webkit-box-direction:reverse;-ms-flex-direction:column-reverse;flex-direction:column-reverse}.col-xs,.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9,.col-xs-offset-0,.col-xs-offset-1,.col-xs-offset-10,.col-xs-offset-11,.col-xs-offset-12,.col-xs-offset-2,.col-xs-offset-3,.col-xs-offset-4,.col-xs-offset-5,.col-xs-offset-6,.col-xs-offset-7,.col-xs-offset-8,.col-xs-offset-9{box-sizing:border-box;-webkit-box-flex:0;-ms-flex:0 0 auto;flex:none;padding-right:.5rem;padding-left:.5rem}.col-xs{-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;-ms-flex-preferred-size:0;flex-basis:0;max-width:100%}.col-xs-1{-ms-flex-preferred-size:8.33333333%;flex-basis:8.33333333%;max-width:8.33333333%}.col-xs-2{-ms-flex-preferred-size:16.66666667%;flex-basis:16.66666667%;max-width:16.66666667%}.col-xs-3{-ms-flex-preferred-size:25%;flex-basis:25%;max-width:25%}.col-xs-4{-ms-flex-preferred-size:33.33333333%;flex-basis:33.33333333%;max-width:33.33333333%}.col-xs-5{-ms-flex-preferred-size:41.66666667%;flex-basis:41.66666667%;max-width:41.66666667%}.col-xs-6{-ms-flex-preferred-size:50%;flex-basis:50%;max-width:50%}.col-xs-7{-ms-flex-preferred-size:58.33333333%;flex-basis:58.33333333%;max-width:58.33333333%}.col-xs-8{-ms-flex-preferred-size:66.66666667%;flex-basis:66.66666667%;max-width:66.66666667%}.col-xs-9{-ms-flex-preferred-size:75%;flex-basis:75%;max-width:75%}.col-xs-10{-ms-flex-preferred-size:83.33333333%;flex-basis:83.33333333%;max-width:83.33333333%}.col-xs-11{-ms-flex-preferred-size:91.66666667%;flex-basis:91.66666667%;max-width:91.66666667%}.col-xs-12{-ms-flex-preferred-size:100%;flex-basis:100%;max-width:100%}.col-xs-offset-0{margin-left:0}.col-xs-offset-1{margin-left:8.33333333%}.col-xs-offset-2{margin-left:16.66666667%}.col-xs-offset-3{margin-left:25%}.col-xs-offset-4{margin-left:33.33333333%}.col-xs-offset-5{margin-left:41.66666667%}.col-xs-offset-6{margin-left:50%}.col-xs-offset-7{margin-left:58.33333333%}.col-xs-offset-8{margin-left:66.66666667%}.col-xs-offset-9{margin-left:75%}.col-xs-offset-10{margin-left:83.33333333%}.col-xs-offset-11{margin-left:91.66666667%}.start-xs{-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;text-align:start}.center-xs{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;text-align:center}.end-xs{-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end;text-align:end}.top-xs{-webkit-box-align:start;-ms-flex-align:start;align-items:flex-start}.middle-xs{-webkit-box-align:center;-ms-flex-align:center;align-items:center}.bottom-xs{-webkit-box-align:end;-ms-flex-align:end;align-items:flex-end}.around-xs{-ms-flex-pack:distribute;justify-content:space-around}.between-xs{-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}.first-xs{-webkit-box-ordinal-group:0;-ms-flex-order:-1;order:-1}.last-xs{-webkit-box-ordinal-group:2;-ms-flex-order:1;order:1}@media only screen and (min-width:48em){.container{width:49rem}.col-sm,.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9,.col-sm-offset-0,.col-sm-offset-1,.col-sm-offset-10,.col-sm-offset-11,.col-sm-offset-12,.col-sm-offset-2,.col-sm-offset-3,.col-sm-offset-4,.col-sm-offset-5,.col-sm-offset-6,.col-sm-offset-7,.col-sm-offset-8,.col-sm-offset-9{box-sizing:border-box;-webkit-box-flex:0;-ms-flex:0 0 auto;flex:none;padding-right:.5rem;padding-left:.5rem}.col-sm{-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;-ms-flex-preferred-size:0;flex-basis:0;max-width:100%}.col-sm-1{-ms-flex-preferred-size:8.33333333%;flex-basis:8.33333333%;max-width:8.33333333%}.col-sm-2{-ms-flex-preferred-size:16.66666667%;flex-basis:16.66666667%;max-width:16.66666667%}.col-sm-3{-ms-flex-preferred-size:25%;flex-basis:25%;max-width:25%}.col-sm-4{-ms-flex-preferred-size:33.33333333%;flex-basis:33.33333333%;max-width:33.33333333%}.col-sm-5{-ms-flex-preferred-size:41.66666667%;flex-basis:41.66666667%;max-width:41.66666667%}.col-sm-6{-ms-flex-preferred-size:50%;flex-basis:50%;max-width:50%}.col-sm-7{-ms-flex-preferred-size:58.33333333%;flex-basis:58.33333333%;max-width:58.33333333%}.col-sm-8{-ms-flex-preferred-size:66.66666667%;flex-basis:66.66666667%;max-width:66.66666667%}.col-sm-9{-ms-flex-preferred-size:75%;flex-basis:75%;max-width:75%}.col-sm-10{-ms-flex-preferred-size:83.33333333%;flex-basis:83.33333333%;max-width:83.33333333%}.col-sm-11{-ms-flex-preferred-size:91.66666667%;flex-basis:91.66666667%;max-width:91.66666667%}.col-sm-12{-ms-flex-preferred-size:100%;flex-basis:100%;max-width:100%}.col-sm-offset-0{margin-left:0}.col-sm-offset-1{margin-left:8.33333333%}.col-sm-offset-2{margin-left:16.66666667%}.col-sm-offset-3{margin-left:25%}.col-sm-offset-4{margin-left:33.33333333%}.col-sm-offset-5{margin-left:41.66666667%}.col-sm-offset-6{margin-left:50%}.col-sm-offset-7{margin-left:58.33333333%}.col-sm-offset-8{margin-left:66.66666667%}.col-sm-offset-9{margin-left:75%}.col-sm-offset-10{margin-left:83.33333333%}.col-sm-offset-11{margin-left:91.66666667%}.start-sm{-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;text-align:start}.center-sm{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;text-align:center}.end-sm{-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end;text-align:end}.top-sm{-webkit-box-align:start;-ms-flex-align:start;align-items:flex-start}.middle-sm{-webkit-box-align:center;-ms-flex-align:center;align-items:center}.bottom-sm{-webkit-box-align:end;-ms-flex-align:end;align-items:flex-end}.around-sm{-ms-flex-pack:distribute;justify-content:space-around}.between-sm{-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}.first-sm{-webkit-box-ordinal-group:0;-ms-flex-order:-1;order:-1}.last-sm{-webkit-box-ordinal-group:2;-ms-flex-order:1;order:1}}@media only screen and (min-width:64em){.container{width:65rem}.col-md,.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9,.col-md-offset-0,.col-md-offset-1,.col-md-offset-10,.col-md-offset-11,.col-md-offset-12,.col-md-offset-2,.col-md-offset-3,.col-md-offset-4,.col-md-offset-5,.col-md-offset-6,.col-md-offset-7,.col-md-offset-8,.col-md-offset-9{box-sizing:border-box;-webkit-box-flex:0;-ms-flex:0 0 auto;flex:none;padding-right:.5rem;padding-left:.5rem}.col-md{-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;-ms-flex-preferred-size:0;flex-basis:0;max-width:100%}.col-md-1{-ms-flex-preferred-size:8.33333333%;flex-basis:8.33333333%;max-width:8.33333333%}.col-md-2{-ms-flex-preferred-size:16.66666667%;flex-basis:16.66666667%;max-width:16.66666667%}.col-md-3{-ms-flex-preferred-size:25%;flex-basis:25%;max-width:25%}.col-md-4{-ms-flex-preferred-size:33.33333333%;flex-basis:33.33333333%;max-width:33.33333333%}.col-md-5{-ms-flex-preferred-size:41.66666667%;flex-basis:41.66666667%;max-width:41.66666667%}.col-md-6{-ms-flex-preferred-size:50%;flex-basis:50%;max-width:50%}.col-md-7{-ms-flex-preferred-size:58.33333333%;flex-basis:58.33333333%;max-width:58.33333333%}.col-md-8{-ms-flex-preferred-size:66.66666667%;flex-basis:66.66666667%;max-width:66.66666667%}.col-md-9{-ms-flex-preferred-size:75%;flex-basis:75%;max-width:75%}.col-md-10{-ms-flex-preferred-size:83.33333333%;flex-basis:83.33333333%;max-width:83.33333333%}.col-md-11{-ms-flex-preferred-size:91.66666667%;flex-basis:91.66666667%;max-width:91.66666667%}.col-md-12{-ms-flex-preferred-size:100%;flex-basis:100%;max-width:100%}.col-md-offset-0{margin-left:0}.col-md-offset-1{margin-left:8.33333333%}.col-md-offset-2{margin-left:16.66666667%}.col-md-offset-3{margin-left:25%}.col-md-offset-4{margin-left:33.33333333%}.col-md-offset-5{margin-left:41.66666667%}.col-md-offset-6{margin-left:50%}.col-md-offset-7{margin-left:58.33333333%}.col-md-offset-8{margin-left:66.66666667%}.col-md-offset-9{margin-left:75%}.col-md-offset-10{margin-left:83.33333333%}.col-md-offset-11{margin-left:91.66666667%}.start-md{-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;text-align:start}.center-md{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;text-align:center}.end-md{-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end;text-align:end}.top-md{-webkit-box-align:start;-ms-flex-align:start;align-items:flex-start}.middle-md{-webkit-box-align:center;-ms-flex-align:center;align-items:center}.bottom-md{-webkit-box-align:end;-ms-flex-align:end;align-items:flex-end}.around-md{-ms-flex-pack:distribute;justify-content:space-around}.between-md{-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}.first-md{-webkit-box-ordinal-group:0;-ms-flex-order:-1;order:-1}.last-md{-webkit-box-ordinal-group:2;-ms-flex-order:1;order:1}}@media only screen and (min-width:75em){.container{width:76rem}.col-lg,.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9,.col-lg-offset-0,.col-lg-offset-1,.col-lg-offset-10,.col-lg-offset-11,.col-lg-offset-12,.col-lg-offset-2,.col-lg-offset-3,.col-lg-offset-4,.col-lg-offset-5,.col-lg-offset-6,.col-lg-offset-7,.col-lg-offset-8,.col-lg-offset-9{box-sizing:border-box;-webkit-box-flex:0;-ms-flex:0 0 auto;flex:none;padding-right:.5rem;padding-left:.5rem}.col-lg{-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1;-ms-flex-preferred-size:0;flex-basis:0;max-width:100%}.col-lg-1{-ms-flex-preferred-size:8.33333333%;flex-basis:8.33333333%;max-width:8.33333333%}.col-lg-2{-ms-flex-preferred-size:16.66666667%;flex-basis:16.66666667%;max-width:16.66666667%}.col-lg-3{-ms-flex-preferred-size:25%;flex-basis:25%;max-width:25%}.col-lg-4{-ms-flex-preferred-size:33.33333333%;flex-basis:33.33333333%;max-width:33.33333333%}.col-lg-5{-ms-flex-preferred-size:41.66666667%;flex-basis:41.66666667%;max-width:41.66666667%}.col-lg-6{-ms-flex-preferred-size:50%;flex-basis:50%;max-width:50%}.col-lg-7{-ms-flex-preferred-size:58.33333333%;flex-basis:58.33333333%;max-width:58.33333333%}.col-lg-8{-ms-flex-preferred-size:66.66666667%;flex-basis:66.66666667%;max-width:66.66666667%}.col-lg-9{-ms-flex-preferred-size:75%;flex-basis:75%;max-width:75%}.col-lg-10{-ms-flex-preferred-size:83.33333333%;flex-basis:83.33333333%;max-width:83.33333333%}.col-lg-11{-ms-flex-preferred-size:91.66666667%;flex-basis:91.66666667%;max-width:91.66666667%}.col-lg-12{-ms-flex-preferred-size:100%;flex-basis:100%;max-width:100%}.col-lg-offset-0{margin-left:0}.col-lg-offset-1{margin-left:8.33333333%}.col-lg-offset-2{margin-left:16.66666667%}.col-lg-offset-3{margin-left:25%}.col-lg-offset-4{margin-left:33.33333333%}.col-lg-offset-5{margin-left:41.66666667%}.col-lg-offset-6{margin-left:50%}.col-lg-offset-7{margin-left:58.33333333%}.col-lg-offset-8{margin-left:66.66666667%}.col-lg-offset-9{margin-left:75%}.col-lg-offset-10{margin-left:83.33333333%}.col-lg-offset-11{margin-left:91.66666667%}.start-lg{-webkit-box-pack:start;-ms-flex-pack:start;justify-content:flex-start;text-align:start}.center-lg{-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;text-align:center}.end-lg{-webkit-box-pack:end;-ms-flex-pack:end;justify-content:flex-end;text-align:end}.top-lg{-webkit-box-align:start;-ms-flex-align:start;align-items:flex-start}.middle-lg{-webkit-box-align:center;-ms-flex-align:center;align-items:center}.bottom-lg{-webkit-box-align:end;-ms-flex-align:end;align-items:flex-end}.around-lg{-ms-flex-pack:distribute;justify-content:space-around}.between-lg{-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between}.first-lg{-webkit-box-ordinal-group:0;-ms-flex-order:-1;order:-1}.last-lg{-webkit-box-ordinal-group:2;-ms-flex-order:1;order:1}}</style>
+  
+
+  
+
+  <link href="/index.xml" rel="alternate" type="application/rss+xml"
+    title="Lumen&#39;s Annex">
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css?family=Bree+Serif|Bungee+Shade" rel="stylesheet">
+  
+  
+
+  
+  
+</head>
+
+
+<body>
+  <article class="post Chinese" id="article">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="site-header">
+          
+<header>
+  <div class="header-title">
+    <a href="/"
+      >Lumen&#39;s Annex</a
+    >
+  </div>
+  <div class="header-subtitle">Le vent se lève ，il faut tenter de vivre.</div>
+</header>
+<div class="row end-md center-xs header-items">
+  
+  <div class="header-item">
+    <a href="/about" target="_blank">About</a>
+  </div>
+  
+</div>
+<div class="row end-xs">
+   
+</div>
+<div class="header-line"></div>
+
+        </div>
+        <header class="post-header">
+          <h1 class="post-title">iOS 丨 频控问题</h1>
+          
+          <div class="row post-desc">
+            <div class="col-xs-6">
+              
+              <time class="post-date" datetime="2020-10-31 00:00:00 UTC">
+                31 Oct 2020
+              </time>
+              
+            </div>
+            <div class="col-xs-6">
+              
+              <div class="post-author">
+                <a target="_blank" href="https://joway.io/">@Lumen</a>
+              </div>
+              
+            </div>
+          </div>
+          
+        </header>
+
+        <div class="post-content markdown-body">
+          
+          <h2 id="背景">背景</h2>
+<p>客户端有时监听了若干状态。比如不同的VIP状态等，在每次监听改变的时候可能需要重新向后端发请求。这样可能产生的情况是，当某个状态发生改变的时候，多个地方都会监听到，这样可能导致短时间内发出大量相同请求。后端可能进行了频控，这样就会导致拿不到数据展示错误的样式。</p>
+<h2 id="debounce--throttle">debounce &amp; Throttle</h2>
+<p>前端可能会经常使用的两个方法：防抖和节流。可以在这个场景内去使用。</p>
+<p>debounce方法的作用是，在触发方法后的一段时间内，才真正的调用方法。如果在等待的时间内重新有新的触发，那么就会重新计算时间。Throttle方法的作用是，在一段时间内对方法的触发会压缩为一个。</p>
+<p>在这个情况下，我们可以使用throttle的方法，在一段时间内的响应，只发送一个请求。</p>
+<h2 id="实现">实现</h2>
+<h3 id="rxswift">RxSwift</h3>
+<p>有两种实现的方法。因为项目是用swift开发的，可以直接引入RxSwift库，<a href="https://github.com/ReactiveX/RxSwift">GitHub - ReactiveX/RxSwift: Reactive Programming in Swift</a>。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-swift" data-lang="swift">    <span style="color:#204a87;font-weight:bold">private</span> <span style="color:#204a87;font-weight:bold">let</span> <span style="color:#000">vipChangePublishSubJect</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000">PublishSubject</span><span style="color:#000;font-weight:bold">&lt;</span><span style="color:#204a87">Void</span><span style="color:#000;font-weight:bold">&gt;()</span>
+    <span style="color:#204a87;font-weight:bold">private</span> <span style="color:#204a87;font-weight:bold">let</span> <span style="color:#000">disposeBag</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000">DisposeBag</span><span style="color:#000;font-weight:bold">()</span>
+
+        <span style="color:#000">vipChangePublishSubJect</span>
+            <span style="color:#000;font-weight:bold">.</span><span style="color:#000">debounce</span><span style="color:#000;font-weight:bold">(.</span><span style="color:#000">milliseconds</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">200</span><span style="color:#000;font-weight:bold">),</span> <span style="color:#000">scheduler</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">MainScheduler</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">instance</span><span style="color:#000;font-weight:bold">)</span>
+            <span style="color:#000;font-weight:bold">.</span><span style="color:#000">subscribe</span> <span style="color:#000;font-weight:bold">{[</span><span style="color:#204a87;font-weight:bold">weak</span> <span style="color:#204a87;font-weight:bold">self</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#204a87;font-weight:bold">_</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">in</span>
+ 					<span style="color:#8f5902;font-style:italic">//action</span>
+            <span style="color:#000;font-weight:bold">}.</span><span style="color:#000">disposed</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">by</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">disposeBag</span><span style="color:#000;font-weight:bold">)</span>
+</code></pre></div><p>在我们当前的业务场景下，这不见得是非常好的一种做法。使用这种方法意味着要在每一个业务场景去进行单独的设置，这样显然是不好的做法。在我们的业务中，会发生频控的原因在于，业务场景需要监听权益的变化，在权益变化的时候发送请求对用户看到的内容进行刷新。权益本身的变化可能有多个，其中的一个权益内容发生变化可能会重新发送一次请求。最好的做法是，我们在源头，也就是在监听权益内容的地方进行限流。</p>
+<h3 id="自己实现">自己实现</h3>
+<p>自己实现一个debounce方法。这里有意思的一点在于，虽然说的是debounce方法，但实际上却是Throttle。本质上是将一段时间内的方法触发delay，这段时间内对方法的额外触发将不会重新的触发方法。</p>
+<p>要实现这个方法，我们可以使用<code>Dispatchworkitem</code>来实现。本质思路是，因为可能涉及到多个权益切换的监听，每一种切换可能发送出去不同的请求。因此要对不同的切换进行不同的响应。因此还需要使用associate进行关联。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-swift" data-lang="swift"><span style="color:#204a87;font-weight:bold">private</span> <span style="color:#204a87;font-weight:bold">func</span> <span style="color:#000">vipChangeDebounce</span><span style="color:#000;font-weight:bold">()</span> <span style="color:#000;font-weight:bold">-&gt;</span> <span style="color:#000">DispatchWorkItem</span> <span style="color:#000;font-weight:bold">{</span>
+        <span style="color:#204a87;font-weight:bold">let</span> <span style="color:#000">workItem</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">DispatchWorkItem</span><span style="color:#000;font-weight:bold">?</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000">getAssociated</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">associatedKey</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">&amp;</span><span style="color:#000">Key</span><span style="color:#000;font-weight:bold">)</span>
+        <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#204a87;font-weight:bold">let</span> <span style="color:#000">result</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000">workItem</span> <span style="color:#000;font-weight:bold">{</span>
+            <span style="color:#000">result</span><span style="color:#000;font-weight:bold">.</span><span style="color:#000">cancel</span><span style="color:#000;font-weight:bold">()</span>
+            <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">result</span>
+        <span style="color:#000;font-weight:bold">}</span> <span style="color:#204a87;font-weight:bold">else</span> <span style="color:#000;font-weight:bold">{</span>
+            <span style="color:#204a87;font-weight:bold">let</span> <span style="color:#000">workItem</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">DispatchWorkItem</span> <span style="color:#000;font-weight:bold">=</span> <span style="color:#000">DispatchWorkItem</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">block</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">{</span> <span style="color:#000;font-weight:bold">[</span><span style="color:#204a87;font-weight:bold">weak</span> <span style="color:#204a87;font-weight:bold">self</span><span style="color:#000;font-weight:bold">]</span> <span style="color:#204a87;font-weight:bold">in</span>
+                <span style="color:#000">delay</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">0.2</span><span style="color:#000;font-weight:bold">){</span>
+                    <span style="color:#8f5902;font-style:italic">//action</span>
+                    <span style="color:#204a87;font-weight:bold">self</span><span style="color:#000;font-weight:bold">?.</span><span style="color:#000">removeAssociated</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">associatedKey</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">&amp;</span><span style="color:#000">BNVipChangeAssociatedKey</span><span style="color:#000;font-weight:bold">)</span>
+                <span style="color:#000;font-weight:bold">}</span>
+            <span style="color:#000;font-weight:bold">})</span>
+            <span style="color:#000">setAssociated</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">value</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">workItem</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">associatedKey</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">&amp;</span><span style="color:#000">Key</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">policy</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000;font-weight:bold">.</span><span style="color:#000">OBJC_ASSOCIATION_RETAIN</span><span style="color:#000;font-weight:bold">)</span>
+            <span style="color:#204a87;font-weight:bold">return</span> <span style="color:#000">workItem</span>
+        <span style="color:#000;font-weight:bold">}</span>
+    <span style="color:#000;font-weight:bold">}</span>
+</code></pre></div><p>这里要注意两个坑。首先是在获取到关联值之前，一定要取消掉前面一次的任务。不然完全就不能起到限流的作用。第二点在于，每次执行完任务之后，一定要remove掉关联值。否则这个关联值在内存中会一直存在，之后的所有操作就会无效。</p>
+<p>另外要注意的一点是，设置关联值本质上是一个OC方法。因此所有使用该方法的类有一定要是NSObject类型。</p>
+<h2 id="objc_setassociatedobject">objc_setAssociatedObject</h2>
+<p>我们来看一下关联值这个方法。让一个对象和另一个对象关联起来，即一个对象保持对另一个对象的引用，并可以获取这个对象。关键字是一个void类型的指针。每个关键字必须是唯一的，通常都是会采用静态变量来作为关键字。</p>
+<div class="highlight"><pre tabindex="0" style="background-color:#f8f8f8;-moz-tab-size:2;-o-tab-size:2;tab-size:2"><code class="language-objectivec" data-lang="objectivec"><span style="color:#8f5902;font-style:italic">/** 
+</span><span style="color:#8f5902;font-style:italic"> * Sets an associated value for a given object using a given key and association policy.
+</span><span style="color:#8f5902;font-style:italic"> * 
+</span><span style="color:#8f5902;font-style:italic"> * @param object The source object for the association.
+</span><span style="color:#8f5902;font-style:italic"> * @param key The key for the association.
+</span><span style="color:#8f5902;font-style:italic"> * @param value The value to associate with the key key for object. Pass nil to clear an existing association.
+</span><span style="color:#8f5902;font-style:italic"> * @param policy The policy for the association. For possible values, see “Associative Object Behaviors.”
+</span><span style="color:#8f5902;font-style:italic"> * 
+</span><span style="color:#8f5902;font-style:italic"> * @see objc_setAssociatedObject
+</span><span style="color:#8f5902;font-style:italic"> * @see objc_removeAssociatedObjects
+</span><span style="color:#8f5902;font-style:italic"> */</span>
+<span style="color:#000;font-weight:bold">@</span><span style="color:#000">available</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">iOS</span> <span style="color:#0000cf;font-weight:bold">3.1</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#ce5c00;font-weight:bold">*</span><span style="color:#000;font-weight:bold">)</span>
+<span style="color:#000">public</span> <span style="color:#000">func</span> <span style="color:#000">objc_setAssociatedObject</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">_</span> <span style="color:#f57900">object</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">Any</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">_</span> <span style="color:#f57900">key</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">UnsafeRawPointer</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">_</span> <span style="color:#f57900">value</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">Any</span><span style="color:#ce5c00;font-weight:bold">?</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">_</span> <span style="color:#f57900">policy</span><span style="color:#000;font-weight:bold">:</span> <span style="color:#000">objc_AssociationPolicy</span><span style="color:#000;font-weight:bold">)</span>
+</code></pre></div><p>在oc中，关联对象是runtime的一个特征体现。oc使用一张全局表去记录关联的key和value。
+<a href="https://imgchr.com/i/BUj3FK"><img src="https://s1.ax1x.com/2020/10/31/BUj3FK.png" alt="BUj3FK.png"></a></p>
+<ul>
+<li>所有的关联对象都由一个<strong>AssociationsManager</strong>对象来管理，这个对象里面有一个<strong>AssociationsHashMap</strong>。</li>
+<li><strong>AssociationsHashMap</strong>由许多key-value构成。key是对象的地址；value是一个<strong>ObjectAssociationMap</strong>，也就是所谓的关联对象。</li>
+<li><strong>ObjectAssociationMap</strong>就是关联对象，每个关联对象里面包含多个key-value对。key是属性名；value是<strong>ObjcAssociation</strong>，也就是相当于属性对应的实例变量。</li>
+<li><strong>ObjcAssociation</strong>相当于实例变量，该结构体有两个成员：<strong>_policy</strong> 属性的内存管理语义；<strong>_value</strong> 属性的值</li>
+</ul>
+
+        </div>
+
+        <div class="row middle-xs">
+          <div class="col-xs-12">
+            
+          </div>
+        </div>
+        
+          <div class="row">
+            <div class="col-xs-12">
+              
+            </div>
+          </div>
+
+          
+
+
+
+          
+          
+          <div style="height: 50px;"></div>
+          
+          <div class="post-comments">
+            <div id="disqus_thread"></div>
+<script>
+  window.addEventListener("load", () => {
+    (function() {
+      
+      var d = document,
+        s = d.createElement("script");
+      s.src = "https://Lumen.disqus.com/embed.js";
+      s.setAttribute("data-timestamp", +new Date());
+      (d.head || d.body).appendChild(s);
+    })();
+  });
+</script>
+<noscript
+  >Please enable JavaScript to view the
+  <a href="https://disqus.com/?ref_noscript"
+    >comments powered by Disqus.</a
+  ></noscript
+>
+
+          </div>
+          
+        
+
+        <div class="site-footer">
+  
+  
+</div>
+
+      </div>
+    </div>
+  </article>
+
+  
+<script src="/js/lazyload.min.js"></script>
+<script>
+  var lazyImage = new LazyLoad({
+    container: document.getElementById('article')
+  });
+</script>
+
+<script>
+  
+  
+    
+    
+  
+</script>
+
+  
+
+</body>
+
+</html>
