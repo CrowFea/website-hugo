@@ -16,7 +16,7 @@ DefaultContentLanguage = "cn"
 
 [author]
   name = "Lumen"
-  homepage = "https://joway.io/"
+  homepage = "https://lumenannex.github.io"
 
 [languages]
   #[languages.en]
@@ -30,7 +30,7 @@ DefaultContentLanguage = "cn"
 
 [params]
 headTitle = "Lumen's Annex"
-description = "Le vent se lève ，il faut tenter de vivre."
+description = "Le vent se lève, il faut tenter de vivre."
 favicon = "/logo.png"
 mainSections = ["posts"]
 #staticPrefix = "https://cdn.jsdelivr.net/gh/joway/blog"
@@ -61,6 +61,10 @@ lazyImage = true
 #[[params.socials]]
 #name = "Travel"
 #link = "/travel"
+
+[[params.socials]]
+name = "Github"
+link =  "https://github.com/LumenAnnex" 
 
 [[params.socials]]
 name = "About"
